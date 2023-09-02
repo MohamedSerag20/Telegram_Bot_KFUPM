@@ -1,93 +1,114 @@
 """
 Kinan Code:
 """
-# from telegram import Update, InlineKeyboardButton, InlineKeyboardMarkup
-# from telegram.ext import ApplicationBuilder, CommandHandler, filters, ContextTypes, MessageHandler, CallbackQueryHandler
+from telegram import Update, InlineKeyboardButton, InlineKeyboardMarkup
+from telegram.ext import ApplicationBuilder, CommandHandler, filters, ContextTypes, MessageHandler, CallbackQueryHandler
 
 # TOKEN = "6429830845:AAFRE-CV-DkmHTbvujDYKSQXd-FXZbGMksA"
 # BOT_USERNAME = "@TagrebyBot"
 # ME203_w="https://chat.whatsapp.com/LOx9wlbPDcOKYm05EXVpTo"
 
 
-# # The Process of dealing with users' messages    
-# async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
- 
-#     # Sending the correct response depending on the message sent by user       
-#     response: str = handle_response(update.message.text)
-    
-#     if response != "":
-#         await update.message.reply_text(response, reply_markup= generate_keyboard_layout(response))
+TOKEN = '6389988766:AAHu3HD3HEEAuQxxSaCdul9RX4fqPRyjwIo'
+BOT_USERNAME = "@KFUPM_2023_Bot"
+Courses = [['12345', 'ME203', "https://chat.whatsapp.com/LOx9wlbPDcOKYm05EXVpTo"]]
 
 
-# # Return The Name of the Course
-# def handle_response(text: str) -> str:
-#     """
-#     This fun. can be enhanced better....
-#   - Suppose that the course and number are seperated
-#   - Suppose that the course and gropup are seperated
-#     """
-
-#     # Filter the message from bot's id   
-#     if BOT_USERNAME in text:
-#         text: str = text.replace(BOT_USERNAME, "")
-
-#     processed: str = text.lower()
-    
-#     if "me203 group" in processed or "قروب me203" in processed:
-#         return f"ME203"
-    
-
-# # Return The correct keyboard layout depending on the request
-# def generate_keyboard_layout(request: str) -> InlineKeyboardMarkup:
-    
-#     layout = [[InlineKeyboardButton("Groups", callback_data="Groups:"), 
-#             InlineKeyboardButton("Resources", callback_data="Resources:"),
-#             InlineKeyboardButton("How to Study?", callback_data="How to Study?")]]
-
-#     if request == "Groups:":
-#         # Layout For Clicking Groups
-#         layout = [[InlineKeyboardButton("Telegram Group", url = ME203_w), 
-#                     InlineKeyboardButton("Whats App Group", url = ME203_w),
-#                     InlineKeyboardButton("Return To Menu..", callback_data="main_menu")]]
-
-#     elif request == "Resources:":
-#         # Layout For Clicking Resources
-#         layout = [[InlineKeyboardButton("Old Exams", url = ME203_w), 
-#                     InlineKeyboardButton("Slides", url = ME203_w),
-#                     InlineKeyboardButton("Return To Menu..", callback_data="main_menu")]]
-
-#     elif request == "How to Study?" :
-#         # Layout For Clicking How to Study?
-#         layout = [[InlineKeyboardButton("Return To Menu..", callback_data="main_menu")]]
-        
-#     show = InlineKeyboardMarkup(layout)
-
-#     return show
+async def start_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    await update.message.reply_text("Hello there!, I am your KFUPM Bot👋\nSend me Your Course Name or Course Number")
 
 
-# async def update_Menu(update: Update, context: ContextTypes.DEFAULT_TYPE):
-#     query = update.callback_query
-#     request = query.data
-#     show: InlineKeyboardMarkup = generate_keyboard_layout(request)
-
-#     if request == "How to Study?":
-#         await context.bot.send_message(chat_id = update.effective_user.id, 
-#                                     text="It is suggested to do: \n1- ......\n2-.....\n3-......")
-        
-#     await query.edit_message_text(text = request , reply_markup=show)
+async def help_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    await update.message.reply_text("KFUPM Bot is in your service\n\nYou should write your course name, course number in this format \"ME203\",\"12345\" respectively.")
 
 
-# async def error(update: Update, context: ContextTypes.DEFAULT_TYPE):
-#     print(f"update ({update} caused error {context.error} )")
-    
+# Return The Name of the Course
+def handle_response(text: str) -> str:
+    """
+    This fun. can be enhanced better....
+  - Suppose that the course and number are seperated
+  - Suppose that the course and gropup are seperated
+    """
+    # Filter the message from bot's id
+    if BOT_USERNAME in text:
+        text: str = text.replace(BOT_USERNAME, "")
+        # text: str = text.replace(BOT_USERNAME, "")
+    processed: str = text.lower()
+    if "me203 group" in processed or "قروب me203" in processed or "ME203" == text:
+        return f"ME203"
 
-# if __name__ == '__main__':
-#     app = ApplicationBuilder().token(TOKEN).build()
 
-#     app.add_handler(MessageHandler(filters.TEXT, handle_message))
-#     app.add_handler(CallbackQueryHandler(update_Menu))
+# The Process of dealing with users' messages
+async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    # Sending the correct response depending on the message sent by user
+    response: str = handle_response(update.message.text)
+    print(response)
+    if response != "":
+        for course in Courses:
+            if response == course[0] or response == course[1]:
+                await update.message.reply_text(response, reply_markup=generate_keyboard_layout(response))
+            else:
+                await update.message.reply_text(response)
 
-#     app.run_polling()
+
+
+# Return The correct keyboard layout depending on the request
+def generate_keyboard_layout(request: str) -> InlineKeyboardMarkup:
+
+    layout = [[InlineKeyboardButton("Groups", callback_data="Groups:"),
+               InlineKeyboardButton("Resources", callback_data="Resources:"),
+               InlineKeyboardButton("How to Study?", callback_data="How to Study?")]]
+
+    if request == "Groups:":
+        # Layout For Clicking Groups
+        layout = [[InlineKeyboardButton("Telegram Group", url="https://chat.whatsapp.com/LOx9wlbPDcOKYm05EXVpTo"),
+                   InlineKeyboardButton(
+                       "Whats App Group", url="https://chat.whatsapp.com/LOx9wlbPDcOKYm05EXVpTo"),
+                   InlineKeyboardButton("Return To Menu..", callback_data="Main_Menu:")]]
+
+    elif request == "Resources:":
+        # Layout For Clicking Resources
+        layout = [[InlineKeyboardButton("Old Exams", url="https://chat.whatsapp.com/LOx9wlbPDcOKYm05EXVpTo"),
+                   InlineKeyboardButton(
+                       "Slides", url="https://chat.whatsapp.com/LOx9wlbPDcOKYm05EXVpTo"),
+                   InlineKeyboardButton("Return To Menu..", callback_data="Main Menu:")]]
+
+    elif request == "How to Study?":
+        # Layout For Clicking How to Study?
+        layout = [[InlineKeyboardButton(
+            "Return To Menu..", callback_data="Main Menu:")]]
+
+    show = InlineKeyboardMarkup(layout)
+
+    return show
+
+
+async def update_Menu(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    query = update.callback_query
+    request = query.data
+    show: InlineKeyboardMarkup = generate_keyboard_layout(request)
+
+    if request == "How to Study?":
+        await context.bot.send_message(chat_id=update.effective_user.id,
+                                       text="It is suggested to do: \n1- ......\n2-.....\n3-......")
+    await query.edit_message_text(text=request, reply_markup=show)
+
+
+async def error(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    await update.message.reply_text('This Course does not Exist\nPlease type "/help" for further Identification')
+    print(f"update ({update} caused error {context.error} )")
+
+
+if __name__ == '__main__':
+    print("Starting bot...")
+    app = ApplicationBuilder().token(TOKEN).build()
+    app.add_handler(CommandHandler('start', start_command))
+    app.add_handler(CommandHandler('help', help_command))
+    app.add_handler(MessageHandler(filters.TEXT, handle_message))
+    app.add_handler(CallbackQueryHandler(update_Menu))
+    app.add_error_handler(error)
+    app.run_polling()
+
 
 """
 Sended Code From Rashid
@@ -179,55 +200,58 @@ Sended Code From Rashid
 #     print("polling...")
 #     app.run_polling(poll_interval=3)
 
-from telegram.ext import Application, CommandHandler, MessageHandler, filters, ContextTypes
-from telegram import Update
-from aiogram import Bot, Dispatcher, executor, types
-from aiogram.types import ReplyKeyboardMarkup, ReplyKeyboardRemove, KeyboardButton
-from aiogram.types import InlineKeyboardMarkup, InlineKeyboardButton
+"""
+Serag's Code
+"""
+# from telegram.ext import Application, CommandHandler, MessageHandler, filters, ContextTypes
+# from telegram import Update
+# from aiogram import Bot, Dispatcher, executor, types
+# from aiogram.types import ReplyKeyboardMarkup, ReplyKeyboardRemove, KeyboardButton
+# from aiogram.types import InlineKeyboardMarkup, InlineKeyboardButton
 
-bot = Bot(token='6389988766:AAHu3HD3HEEAuQxxSaCdul9RX4fqPRyjwIo')
-dp = Dispatcher(bot)
-#Preparing the Buttons
-button1 = InlineKeyboardButton(text="Group Links", callback_data="i want groups link")
-button2 = InlineKeyboardButton(text="Faculty & Evaluation", callback_data="i want faculty and evaluation")
-button3 = InlineKeyboardButton(text="Study Material", callback_data="i want the drive linky")
-button1_1 = InlineKeyboardButton(text="Telegram Group Link", callback_data="i want telegramGL")
-button1_2 = InlineKeyboardButton(text="Whatsapp Group Link", callback_data="i want whatsappGL")
-button2_1 = InlineKeyboardButton(text="Faculty Website", callback_data="i want FacultyWL")
-button2_2 = InlineKeyboardButton(text="STKFUPM Website", callback_data="i want WhatsappWL")
-keyboard_inline_first_message = InlineKeyboardMarkup(row_width=1).add(button1, button2, button3)
-keyboard_inline_button1_response = InlineKeyboardMarkup(row_width=1).add(button1_1, button1_2)
-keyboard_inline_button2_response = InlineKeyboardMarkup(row_width=1).add(button2_1, button2_2)
+# bot = Bot(token='6389988766:AAHu3HD3HEEAuQxxSaCdul9RX4fqPRyjwIo')
+# dp = Dispatcher(bot)
+# #Preparing the Buttons
+# button1 = InlineKeyboardButton(text="Group Links", callback_data="i want groups link")
+# button2 = InlineKeyboardButton(text="Faculty & Evaluation", callback_data="i want faculty and evaluation")
+# button3 = InlineKeyboardButton(text="Study Material", callback_data="i want the drive linky")
+# button1_1 = InlineKeyboardButton(text="Telegram Group Link", callback_data="i want telegramGL")
+# button1_2 = InlineKeyboardButton(text="Whatsapp Group Link", callback_data="i want whatsappGL")
+# button2_1 = InlineKeyboardButton(text="Faculty Website", callback_data="i want FacultyWL")
+# button2_2 = InlineKeyboardButton(text="STKFUPM Website", callback_data="i want WhatsappWL")
+# keyboard_inline_first_message = InlineKeyboardMarkup(row_width=1).add(button1, button2, button3)
+# keyboard_inline_button1_response = InlineKeyboardMarkup(row_width=1).add(button1_1, button1_2)
+# keyboard_inline_button2_response = InlineKeyboardMarkup(row_width=1).add(button2_1, button2_2)
 
-# keyboard1 = ReplyKeyboardMarkup(resize_keyboard=True, one_time_keyboard=True).add("👋 Hello!", "💋 Youtube")
+# # keyboard1 = ReplyKeyboardMarkup(resize_keyboard=True, one_time_keyboard=True).add("👋 Hello!", "💋 Youtube")
 
-#The Response of the start&help messages 
-@dp.message_handler(commands=['start', 'help'])
-async def welcome(message: types.Message):
-    await message.reply("Hello! I am KFUPM Bot, Please Pick a Choice", reply_markup=keyboard_inline_first_message)
+# The Response of the start&help messages
+# @dp.message_handler(commands=['start', 'help'])
+# async def welcome(message: types.Message):
+#     await message.reply("Hello! I am KFUPM Bot, Please Pick a Choice", reply_markup=keyboard_inline_first_message)
 
-#The responses of the buttons
-@dp.callback_query_handler(text=["i want groups link", "i want faculty and evaluation", "i want the drive linky"])
-async def random_value(call: types.CallbackQuery):
-    if call.data == "i want groups link":
-        await call.message.answer("button1") #Here we should put the groups link buttons.
-    if call.data == "i want faculty and evaluation":
-        await call.message.answer("button2") #Here we should put the faculty and STKFUPM link buttons.
-    if call.data == "i want the drive linky":
-        await call.message.answer("button3") #Here we should send the drive link.
-    await call.answer()
+# #The responses of the buttons
+# @dp.callback_query_handler(text=["i want groups link", "i want faculty and evaluation", "i want the drive linky"])
+# async def random_value(call: types.CallbackQuery):
+#     if call.data == "i want groups link":
+#         await call.message.answer("button1") #Here we should put the groups link buttons.
+#     if call.data == "i want faculty and evaluation":
+#         await call.message.answer("button2") #Here we should put the faculty and STKFUPM link buttons.
+#     if call.data == "i want the drive linky":
+#         await call.message.answer("button3") #Here we should send the drive link.
+#     await call.answer()
 
-# the responses of the written messages of the user
-@dp.message_handler()
-async def kb_answer(message: types.Message):
-    if message.text == '👋 Hello!':
-        await message.reply("Hi! How are you?")
-    elif message.text == '💋 Youtube':
-        await message.reply("https://youtube.com/gunthersuper")
-    else:
-        await message.reply(f"Your message is Wroung, Please type /help")
+# # the responses of the written messages of the user
+# @dp.message_handler()
+# async def kb_answer(message: types.Message):
+#     if message.text == '👋 Hello!':
+#         await message.reply("Hi! How are you?")
+#     elif message.text == '💋 Youtube':
+#         await message.reply("https://youtube.com/gunthersuper")
+#     else:
+#         await message.reply(f"Your message is Wroung, Please type /help")
 
 
-executor.start_polling(dp)
+# executor.start_polling(dp)
 
 # we have to know more about the aiogram library, i think it is our success key in this project.
