@@ -18,7 +18,7 @@ def handle_response(text: str) -> str:
     processed:str = text.lower()
 
     if "me203 group" == processed or "قروب me203"== processed:
-        return f"here is the ME203 Group {ME203_w}"
+        return f"here is the ME203 Group {ME201_w}"
 
 
 async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
