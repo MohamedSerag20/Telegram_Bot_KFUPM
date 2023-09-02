@@ -1,66 +1,93 @@
 """
 Kinan Code:
 """
-# from typing import Final
-# from telegram import Update
-# from telegram.ext import Application, CommandHandler, MessageHandler, filters, ContextTypes
-# TOKEN: Final = "6389988766:AAHu3HD3HEEAuQxxSaCdul9RX4fqPRyjwIo"
-# BOT_USERNAME: Final = "@KFUPM_2023_Bot"
+# from telegram import Update, InlineKeyboardButton, InlineKeyboardMarkup
+# from telegram.ext import ApplicationBuilder, CommandHandler, filters, ContextTypes, MessageHandler, CallbackQueryHandler
+
+# TOKEN = "6429830845:AAFRE-CV-DkmHTbvujDYKSQXd-FXZbGMksA"
+# BOT_USERNAME = "@TagrebyBot"
+# ME203_w="https://chat.whatsapp.com/LOx9wlbPDcOKYm05EXVpTo"
 
 
-# # #Groups
-# ME201_w = [[14356, "ME201", "https://chat.whatsapp.com/DIHDaLihVdNFnjAIIjvfse"],
-#            [15790, "CE202", "https://chat.whatsapp.com/FMNa24AzDQxDd0emq9Ds2R"]]
-
-
-# # Commands this is for private chats
-# async def start_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
-#     await update.message.reply_text("Hello there!, Send me Your Course Name or Your Course Number...")
-
-# # This is for both group and private chats
-
-
-# def handle_response(text: str) -> str:
-#     processed: str = text.lower()
-
-#     if "me203 group" == processed or "قروب me203" == processed:
-#         return f"here is the ME203 Group {ME203_w}"
-
-
+# # The Process of dealing with users' messages    
 # async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
-#     message_type: str = update.message.chat.type
-#     text: str = update.message.text
+ 
+#     # Sending the correct response depending on the message sent by user       
+#     response: str = handle_response(update.message.text)
+    
+#     if response != "":
+#         await update.message.reply_text(response, reply_markup= generate_keyboard_layout(response))
 
+
+# # Return The Name of the Course
+# def handle_response(text: str) -> str:
+#     """
+#     This fun. can be enhanced better....
+#   - Suppose that the course and number are seperated
+#   - Suppose that the course and gropup are seperated
+#     """
+
+#     # Filter the message from bot's id   
 #     if BOT_USERNAME in text:
 #         text: str = text.replace(BOT_USERNAME, "")
 
-#     response: str = handle_response(text)
+#     processed: str = text.lower()
+    
+#     if "me203 group" in processed or "قروب me203" in processed:
+#         return f"ME203"
+    
 
-#     print("Bot", response)
-#     await update.message.reply_text(response)
+# # Return The correct keyboard layout depending on the request
+# def generate_keyboard_layout(request: str) -> InlineKeyboardMarkup:
+    
+#     layout = [[InlineKeyboardButton("Groups", callback_data="Groups:"), 
+#             InlineKeyboardButton("Resources", callback_data="Resources:"),
+#             InlineKeyboardButton("How to Study?", callback_data="How to Study?")]]
+
+#     if request == "Groups:":
+#         # Layout For Clicking Groups
+#         layout = [[InlineKeyboardButton("Telegram Group", url = ME203_w), 
+#                     InlineKeyboardButton("Whats App Group", url = ME203_w),
+#                     InlineKeyboardButton("Return To Menu..", callback_data="main_menu")]]
+
+#     elif request == "Resources:":
+#         # Layout For Clicking Resources
+#         layout = [[InlineKeyboardButton("Old Exams", url = ME203_w), 
+#                     InlineKeyboardButton("Slides", url = ME203_w),
+#                     InlineKeyboardButton("Return To Menu..", callback_data="main_menu")]]
+
+#     elif request == "How to Study?" :
+#         # Layout For Clicking How to Study?
+#         layout = [[InlineKeyboardButton("Return To Menu..", callback_data="main_menu")]]
+        
+#     show = InlineKeyboardMarkup(layout)
+
+#     return show
+
+
+# async def update_Menu(update: Update, context: ContextTypes.DEFAULT_TYPE):
+#     query = update.callback_query
+#     request = query.data
+#     show: InlineKeyboardMarkup = generate_keyboard_layout(request)
+
+#     if request == "How to Study?":
+#         await context.bot.send_message(chat_id = update.effective_user.id, 
+#                                     text="It is suggested to do: \n1- ......\n2-.....\n3-......")
+        
+#     await query.edit_message_text(text = request , reply_markup=show)
 
 
 # async def error(update: Update, context: ContextTypes.DEFAULT_TYPE):
 #     print(f"update ({update} caused error {context.error} )")
+    
 
 # if __name__ == '__main__':
+#     app = ApplicationBuilder().token(TOKEN).build()
 
-#     print("Starting bot...")
-#     app = Application.builder().token(TOKEN).build()
-
-#     # Commands
-#     app.add_handler(CommandHandler('start', start_command))
-
-#     # Messages
 #     app.add_handler(MessageHandler(filters.TEXT, handle_message))
+#     app.add_handler(CallbackQueryHandler(update_Menu))
 
-#     # Errors
-#     app.add_error_handler(error)
-
-#     # pools the bot
-#     print("polling...")
-#     app.run_polling(poll_interval=3)
-
+#     app.run_polling()
 
 """
 Sended Code From Rashid
