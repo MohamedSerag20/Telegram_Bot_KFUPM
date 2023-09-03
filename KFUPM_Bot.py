@@ -66,7 +66,7 @@ async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
     if COURSE_NAME == "explain_To_User":
         await update.message.reply_text(COURSE_NAME)
     elif COURSE_NAME == "IgnoreMessage":
-        "No Thing"    
+        "Do No Thing"    
     else:
         FACULTY = df.loc[COURSE_NAME, 'Faculty'].__str__().split('/')
         await update.message.reply_text(text=COURSE_NAME, reply_markup=generate_keyboard_layout(COURSE_NAME))   
@@ -77,7 +77,7 @@ def generate_keyboard_layout(request: str) -> InlineKeyboardMarkup:
     global COURSE_NAME
     global FACULTY
 
-    layout = [[]]
+    layout = []
 
     if request == "Details":
         # Layout For Details
@@ -86,7 +86,7 @@ def generate_keyboard_layout(request: str) -> InlineKeyboardMarkup:
                    [InlineKeyboardButton("Faculty",callback_data="Faculty" )],
                    [InlineKeyboardButton("Drive Link", callback_data="Drive Link", url=df.loc[COURSE_NAME,'Drive Link'])],
                    [InlineKeyboardButton("Course Info", callback_data="Course Info")],
-                   [InlineKeyboardButton("Return To Menu 🔙", callback_data="Main_Menu:")]]
+                   [InlineKeyboardButton("Return To Menu 🔙", callback_data="Click on Details")]]
 
     elif request == "Groups":
         # Layout For Groups
@@ -97,8 +97,9 @@ def generate_keyboard_layout(request: str) -> InlineKeyboardMarkup:
     elif request == "Faculty":
         # Dynamic Layout For Faculty
         
-        for indx, name in enumerate(FACULTY):
-            layout[indx] = InlineKeyboardButton(name, callback_data= name,url=df_Faculty.loc[name, 'URL'])
+        for name in FACULTY:
+            layout.append([InlineKeyboardButton(name, callback_data= name,url=df_Faculty.loc[name, 'URL'])])
+        layout.append([InlineKeyboardButton("Return To Menu 🔙", callback_data="Details")])
     
     elif request == "Course Info":
         # Layout For Clicking How to Study?
