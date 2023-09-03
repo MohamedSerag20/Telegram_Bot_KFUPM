@@ -1,18 +1,23 @@
 """
 Kenan Code:
 """
+import pandas as pd
 from telegram import Update, InlineKeyboardButton, InlineKeyboardMarkup
 from telegram.ext import ApplicationBuilder, CommandHandler, filters, ContextTypes, MessageHandler, CallbackQueryHandler
 
-# TOKEN = "6429830845:AAFRE-CV-DkmHTbvujDYKSQXd-FXZbGMksA"
-# BOT_USERNAME = "@TagrebyBot"
-# ME203_w="https://chat.whatsapp.com/LOx9wlbPDcOKYm05EXVpTo"
+TOKEN = "6429830845:AAFRE-CV-DkmHTbvujDYKSQXd-FXZbGMksA"
+BOT_USERNAME = "@TagrebyBot"
+
+# TOKEN = '6389988766:AAHu3HD3HEEAuQxxSaCdul9RX4fqPRyjwIo'
+# BOT_USERNAME = "@KFUPM_2023_Bot"
 
 
-TOKEN = '6389988766:AAHu3HD3HEEAuQxxSaCdul9RX4fqPRyjwIo'
-BOT_USERNAME = "@KFUPM_2023_Bot"
-Courses = [['12345', 'ME203', "https://chat.whatsapp.com/LOx9wlbPDcOKYm05EXVpTo"]]
 
+df = pd.read_csv('Telegram_Bot_KFUPM\Telegram Bot data.csv', delimiter=',', index_col='Course Name')
+df_Faculty = pd.read_csv('Telegram_Bot_KFUPM\KFUPM_Faculty.csv', delimiter=',', index_col='Professors')
+
+global COURSE_NAME
+FACULTY = []
 
 async def start_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
     await update.message.reply_text("Hello there!, I am your KFUPM Bot👋\nSend me Your Course Name or Course Number")
@@ -22,61 +27,88 @@ async def help_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
     await update.message.reply_text("KFUPM Bot is in your service\n\nYou should write your course name, course number in this format \"ME203\",\"12345\" respectively.")
 
 
-# Return The Name of the Course
-def handle_response(text: str) -> str:
-    """
-    This fun. can be enhanced better....
-  - Suppose that the course and number are seperated
-  - Suppose that the course and gropup are seperated
-    """
+# Check If It is a correct message --> == Course Name
+def handle_response_inGroup(text: str) -> str:
+
     # Filter the message from bot's id
     if BOT_USERNAME in text:
         text: str = text.replace(BOT_USERNAME, "")
-        # text: str = text.replace(BOT_USERNAME, "")
-    processed: str = text.lower()
-    if "me203 group" in processed or "قروب me203" in processed or "ME203" == text:
-        return f"ME203"
+    message: str = text.upper()
+
+    if message in df.index:
+        return message
+    else:
+        return "IgnoreMessage"
+
+def handle_response_inPrivate(text: str) -> str:
+
+    # This Function needs More Improvements
+    message: str = text.upper()
+    if message in df.index:
+        return message
+    else:
+        return "explain_To_User"
 
 
 # The Process of dealing with users' messages
 async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    global COURSE_NAME
+    global FACULTY
+
+    # Message sent By User In Private 
+    if update.message.chat_id == update.effective_user.id:
+        COURSE_NAME = handle_response_inPrivate(update.message.text) # This Method Is Not Completed
+    # Message sent By User In Group 
+    else:
+        COURSE_NAME = handle_response_inGroup(update.message.text)
+    
     # Sending the correct response depending on the message sent by user
-    response: str = handle_response(update.message.text)
-    print(response)
-    if response != "":
-        for course in Courses:
-            if response == course[0] or response == course[1]:
-                await update.message.reply_text(response, reply_markup=generate_keyboard_layout(response))
-            else:
-                await update.message.reply_text(response)
-
-
-
+    if COURSE_NAME == "explain_To_User":
+        await update.message.reply_text(COURSE_NAME)
+    elif COURSE_NAME == "IgnoreMessage":
+        "No Thing"    
+    else:
+        FACULTY = df.loc[COURSE_NAME, 'Faculty'].__str__().split('/')
+        await update.message.reply_text(text=COURSE_NAME, reply_markup=generate_keyboard_layout(COURSE_NAME))   
+        
+                
 # Return The correct keyboard layout depending on the request
 def generate_keyboard_layout(request: str) -> InlineKeyboardMarkup:
+    global COURSE_NAME
+    global FACULTY
 
-    layout = [[InlineKeyboardButton("Groups", callback_data="Groups:"),
-               InlineKeyboardButton("Resources", callback_data="Resources:"),
-               InlineKeyboardButton("How to Study?", callback_data="How to Study?")]]
+    layout = [[]]
 
-    if request == "Groups:":
-        # Layout For Clicking Groups
-        layout = [[InlineKeyboardButton("Telegram Group", url="https://chat.whatsapp.com/LOx9wlbPDcOKYm05EXVpTo"),
-                   InlineKeyboardButton(
-                       "Whats App Group", url="https://chat.whatsapp.com/LOx9wlbPDcOKYm05EXVpTo"),
-                   InlineKeyboardButton("Return To Menu..", callback_data="Main_Menu:")]]
+    if request == "Details":
+        # Layout For Details
+        print(COURSE_NAME)
+        layout = [[InlineKeyboardButton("Groups", callback_data="Groups")],
+                   [InlineKeyboardButton("Faculty",callback_data="Faculty" )],
+                   [InlineKeyboardButton("Drive Link", callback_data="Drive Link", url=df.loc[COURSE_NAME,'Drive Link'])],
+                   [InlineKeyboardButton("Course Info", callback_data="Course Info")],
+                   [InlineKeyboardButton("Return To Menu 🔙", callback_data="Main_Menu:")]]
 
-    elif request == "Resources:":
-        # Layout For Clicking Resources
-        layout = [[InlineKeyboardButton("Old Exams", url="https://chat.whatsapp.com/LOx9wlbPDcOKYm05EXVpTo"),
-                   InlineKeyboardButton(
-                       "Slides", url="https://chat.whatsapp.com/LOx9wlbPDcOKYm05EXVpTo"),
-                   InlineKeyboardButton("Return To Menu..", callback_data="Main Menu:")]]
+    elif request == "Groups":
+        # Layout For Groups
+        layout = [[InlineKeyboardButton("Telegram Group", callback_data= "Telegram Group",url=df.loc[COURSE_NAME, 'Telegram Group URL'])],
+                   [InlineKeyboardButton("WhatsApp Group", callback_data= "WhatsApp Group", url=df.loc[COURSE_NAME, 'Whatsapp Group URL'])],
+                   [InlineKeyboardButton("Return To Menu 🔙", callback_data="Details")]]
 
-    elif request == "How to Study?":
+    elif request == "Faculty":
+        # Dynamic Layout For Faculty
+        
+        for indx, name in enumerate(FACULTY):
+            layout[indx] = InlineKeyboardButton(name, callback_data= name,url=df_Faculty.loc[name, 'URL'])
+    
+    elif request == "Course Info":
         # Layout For Clicking How to Study?
-        layout = [[InlineKeyboardButton(
-            "Return To Menu..", callback_data="Main Menu:")]]
+        layout = [[InlineKeyboardButton("STKFUPM", callback_data= "STKFUPM",url=df.loc[COURSE_NAME, 'Course info STKFUPM URL'])],
+                   [InlineKeyboardButton("Overall Info", callback_data= "Overall Info")],
+                   [InlineKeyboardButton("Study Tips", callback_data= "Study Tips")],
+                   [InlineKeyboardButton("Return To Menu 🔙", callback_data="Details")]]
+    
+    else: # request = Course Name
+        layout = [[InlineKeyboardButton("Details", callback_data="Details")]]
 
     show = InlineKeyboardMarkup(layout)
 
@@ -84,29 +116,42 @@ def generate_keyboard_layout(request: str) -> InlineKeyboardMarkup:
 
 
 async def update_Menu(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    global COURSE_NAME
+
     query = update.callback_query
     request = query.data
     show: InlineKeyboardMarkup = generate_keyboard_layout(request)
 
-    if request == "How to Study?":
+    # Special If Condition For In Private Needs
+    if request == "Overall Info":
         await context.bot.send_message(chat_id=update.effective_user.id,
-                                       text="It is suggested to do: \n1- ......\n2-.....\n3-......")
+                                       text= df.loc[COURSE_NAME, 'Course overall info'])
+    elif request == "Study Tips":
+        await context.bot.send_message(chat_id=update.effective_user.id,
+                                       text=df.loc[COURSE_NAME, 'Study Tips'])
     await query.edit_message_text(text=request, reply_markup=show)
 
 
 async def error(update: Update, context: ContextTypes.DEFAULT_TYPE):
     await update.message.reply_text('This Course does not Exist\nPlease type "/help" for further Identification')
     print(f"update ({update} caused error {context.error} )")
+    # print(f"Begin: {context.error} :End")
 
 
 if __name__ == '__main__':
     print("Starting bot...")
     app = ApplicationBuilder().token(TOKEN).build()
+    
+    # In private
     app.add_handler(CommandHandler('start', start_command))
     app.add_handler(CommandHandler('help', help_command))
+
+    # In Group
     app.add_handler(MessageHandler(filters.TEXT, handle_message))
     app.add_handler(CallbackQueryHandler(update_Menu))
-    app.add_error_handler(error)
+
+    
+    # app.add_error_handler(error)
     app.run_polling()
 
 
