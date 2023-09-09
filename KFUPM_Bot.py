@@ -14,6 +14,7 @@ df = pd.read_csv('Telegram_Bot_KFUPM\Telegram Bot data.csv', delimiter=',', inde
 df_Faculty = pd.read_csv('Telegram_Bot_KFUPM\KFUPM_Faculty.csv', delimiter=',', index_col='Professors')
 
 global COURSE_NAME
+global errorNum
 FACULTY = []
 
 async def start_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
@@ -36,6 +37,7 @@ def handle_response_inGroup(text: str) -> str:
         return message
     else:
         return "IgnoreMessage"
+
 
 def handle_response_inPrivate(text: str) -> str:
 
@@ -67,10 +69,12 @@ async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
     else:
         FACULTY = df.loc[COURSE_NAME, 'Faculty'].__str__().split('/')
         await update.message.reply_text(text=COURSE_NAME, reply_markup=generate_keyboard_layout(COURSE_NAME))   
-        
+    
+    
                 
 # Return The correct keyboard layout depending on the request
 def generate_keyboard_layout(request: str) -> InlineKeyboardMarkup:
+    errorNum = 0
     global COURSE_NAME
     global FACULTY
 
@@ -115,12 +119,16 @@ def generate_keyboard_layout(request: str) -> InlineKeyboardMarkup:
             layout.append([InlineKeyboardButton("Return🔙", callback_data="Faculty Page: "+str(pageNum-1))])      
             
 
-    elif request == "Course Info":
+    elif request == "Course Info" or request == "Try Again":
         # Layout For Course Info
         layout = [[InlineKeyboardButton("STKFUPM", callback_data= "STKFUPM",url=df.loc[COURSE_NAME, 'Course info STKFUPM URL'])],
                    [InlineKeyboardButton("Overall Info", callback_data= "Overall Info")],
                    [InlineKeyboardButton("Study Tips", callback_data= "Study Tips")],
                    [InlineKeyboardButton("Return To Menu 🔙", callback_data="Details")]]
+        
+    elif (request == "Overall Info" or request == "Study Tips") and errorNum == 1:
+        layout = [[InlineKeyboardButton("You Can Not Use This Feature! \nClick On This Link, Then Click: (START) \nhttps://t.me/TagrebyBot \nThen Try Again", callback_data= "AAA")],
+                    [InlineKeyboardButton("Try Again", callback_data="Try Again")]]
     
     else: # request = Course Name
         layout = [[InlineKeyboardButton("Details", callback_data="Details")]]
@@ -148,9 +156,17 @@ async def update_Menu(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
 
 async def error(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    await update.message.reply_text('This Course does not Exist\nPlease type "/help" for further Identification')
-    print(f"update ({update} caused error {context.error} )")
-    # print(f"Begin: {context.error} :End")
+    global errorNum
+
+    # await update.message.reply_text('This Course does not Exist\nPlease type "/help" for further Identification')
+    if context.error.__str__() == "Forbidden: bot can't initiate conversation with a user":
+        await context.bot.send_message(text="You Can Not Use This Feature! \nClick On This Link, Then Click: (START) \nhttps://t.me/TagrebyBot \nThen Try Again"
+                                        ,chat_id=update.effective_chat.id)
+        errorNum = 1
+        
+    else:
+        print(f"{context.error}")
+    
 
 
 if __name__ == '__main__':
@@ -165,7 +181,6 @@ if __name__ == '__main__':
     app.add_handler(MessageHandler(filters.TEXT, handle_message))
     app.add_handler(CallbackQueryHandler(update_Menu))
 
-    
-    # app.add_error_handler(error)
+    app.add_error_handler(error)
     app.run_polling()
 
