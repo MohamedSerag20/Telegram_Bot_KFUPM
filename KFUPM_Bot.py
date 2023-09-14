@@ -10,8 +10,8 @@ BOT_USERNAME = "@TagrebyBot"
 # BOT_USERNAME = "@KFUPM_2023_Bot"
 
 
-df = pd.read_csv('Telegram_Bot_KFUPM\Telegram Bot data.csv', delimiter=',', index_col='Course Name')
-df_Faculty = pd.read_csv('Telegram_Bot_KFUPM\KFUPM_Faculty.csv', delimiter=',', index_col='Professors')
+df = pd.read_csv('Telegram Bot data.csv', delimiter=',', index_col='Course Name')
+df_Faculty = pd.read_csv('KFUPM_Faculty.csv', delimiter=',', index_col='Professors')
 
 global COURSE_NAME
 global errorNum
@@ -46,7 +46,7 @@ def handle_response_inPrivate(text: str) -> str:
     if message in df.index:
         return message
     else:
-        return "explain_To_User"
+        return 'This Course does not Exist\nPlease type "/help".'
 
 
 # The Process of dealing with users' messages
@@ -62,7 +62,7 @@ async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
         COURSE_NAME = handle_response_inGroup(update.message.text)
     
     # Sending the correct response depending on the message sent by user
-    if COURSE_NAME == "explain_To_User":
+    if COURSE_NAME == 'This Course does not Exist\nPlease type "/help".':
         await update.message.reply_text(COURSE_NAME)
     elif COURSE_NAME == "IgnoreMessage":
         "Do No Thing"    
@@ -156,17 +156,7 @@ async def update_Menu(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
 
 async def error(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    global errorNum
-
-    # await update.message.reply_text('This Course does not Exist\nPlease type "/help" for further Identification')
-    if context.error.__str__() == "Forbidden: bot can't initiate conversation with a user":
-        await context.bot.send_message(text="You Can Not Use This Feature! \nClick On This Link, Then Click: (START) \nhttps://t.me/TagrebyBot \nThen Try Again"
-                                        ,chat_id=update.effective_chat.id)
-        errorNum = 1
-        
-    else:
-        print(f"{context.error}")
-    
+    await context.bot.send_message(chat_id=context._chat_id, text='Please send "/Start" to me in "https://t.me/TagrebyBot",\nthen try again.')
 
 
 if __name__ == '__main__':
@@ -181,6 +171,6 @@ if __name__ == '__main__':
     app.add_handler(MessageHandler(filters.TEXT, handle_message))
     app.add_handler(CallbackQueryHandler(update_Menu))
 
+    
     app.add_error_handler(error)
     app.run_polling()
-
