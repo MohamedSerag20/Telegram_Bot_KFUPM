@@ -9,7 +9,6 @@ BOT_USERNAME = "@TagrebyBot"
 # TOKEN = '6389988766:AAHu3HD3HEEAuQxxSaCdul9RX4fqPRyjwIo'
 # BOT_USERNAME = "@KFUPM_2023_Bot"
 
-
 df = pd.read_csv('Telegram Bot data.csv', delimiter=',', index_col='Course Name')
 df_Faculty = pd.read_csv('KFUPM_Faculty.csv', delimiter=',', index_col='Professors')
 
@@ -148,8 +147,11 @@ async def update_Menu(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
 
 async def error(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    await context.bot.send_message(chat_id=context._chat_id, text='Please send "/Start" to me in "https://t.me/TagrebyBot",\nthen try again.')
-
+    if(str(context.error) == "name 'COURSE_NAME' is not defined"):
+        await context.bot.send_message(chat_id=context._chat_id, text='Please Resend the Course name.')
+    else:
+        await context.bot.send_message(chat_id=context._chat_id, text='Please send "/Start" to me in "https://t.me/TagrebyBot",\nthen try again.')
+        print(str(context.error))
 
 if __name__ == '__main__':
     print("Starting bot...")
