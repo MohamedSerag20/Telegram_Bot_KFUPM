@@ -9,69 +9,72 @@ BOT_USERNAME = "@TagrebyBot"
 # TOKEN = '6389988766:AAHu3HD3HEEAuQxxSaCdul9RX4fqPRyjwIo'
 # BOT_USERNAME = "@KFUPM_2023_Bot"
 
-
-df = pd.read_csv('Telegram Bot data.csv', delimiter=',', index_col='Course Name')
-df_Faculty = pd.read_csv('KFUPM_Faculty.csv', delimiter=',', index_col='Professors')
+df = pd.read_csv('Telegram_Bot_KFUPM/Telegram Bot data.csv', delimiter=',', index_col='Course Name')
+df_Faculty = pd.read_csv('Telegram_Bot_KFUPM/KFUPM_Faculty.csv', delimiter=',', index_col='Professors')
 
 global COURSE_NAME
-global errorNum
 FACULTY = []
 
 async def start_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    await update.message.reply_text("Hello there!, I am your KFUPM Bot👋\nSend me Your Course Name or Course Number")
+    await update.message.reply_text("Hello there!, I am your KFUPM Bot👋\nSend me Your Course Name e.g., MATH101")
 
 
 async def help_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    await update.message.reply_text("KFUPM Bot is in your service\n\nYou should write your course name, course number in this format \"ME203\",\"12345\" respectively.")
+    await update.message.reply_text("KFUPM Bot is in your service\n\nYou should write your course name with the number in this format: ICS104.")
 
 
-# Check If It is a correct message --> == Course Name
+# Input Message (From User) In Group
 def handle_response_inGroup(text: str) -> str:
 
     # Filter the message from bot's id
     if BOT_USERNAME in text:
-        text: str = text.replace(BOT_USERNAME, "")
-    message: str = text.upper()
+        text = text.replace(BOT_USERNAME, "")
+    text = text.upper()
 
-    if message in df.index:
-        return message
+    if text in df.index:
+        return "CourseRequest"
+    elif text in df_Faculty.index:
+        return "FacultyRequest"
     else:
         return "IgnoreMessage"
 
-
+# Input Message (From User) In Private
 def handle_response_inPrivate(text: str) -> str:
 
     # This Function needs More Improvements
-    message: str = text.upper()
-    if message in df.index:
-        return message
-    else:
-        return 'This Course does not Exist\nPlease type "/help".'
+    text: str = text.upper()
+    if text in df.index:
+        return "CourseRequest"
+    elif text in df_Faculty.index:
+        return "FacultyRequest"
+    elif text != "/START" and text != "/HELP":
+        return "Explianation"
 
 
-# The Process of dealing with users' messages
 async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    global COURSE_NAME
+    global COURSE_NAME  
     global FACULTY
+    Explian_Message = "It seems that you sent an unapporpiate message, This Course does not Exist\nPlease type /help."
+    Message = update.message.text
 
-    # Message sent By User In Private 
-    if update.message.chat_id == update.effective_user.id:
-        COURSE_NAME = handle_response_inPrivate(update.message.text) # This Method Is Not Completed
-    # Message sent By User In Group 
+    if update.message.chat_id == update.effective_user.id: # In-Private Message
+        input = handle_response_inPrivate(Message)
     else:
-        COURSE_NAME = handle_response_inGroup(update.message.text)
+        input = handle_response_inGroup(Message)
     
     # Sending the correct response depending on the message sent by user
-    if COURSE_NAME == 'This Course does not Exist\nPlease type "/help".':
-        await update.message.reply_text(COURSE_NAME)
-    elif COURSE_NAME == "IgnoreMessage":
-        "Do No Thing"    
-    else:
+    if input == "IgnoreMessage":
+        "Do No Thing"
+    elif input == "CourseRequest":
+        COURSE_NAME = Message.upper()
         FACULTY = df.loc[COURSE_NAME, 'Faculty'].__str__().split('/')
-        await update.message.reply_text(text=COURSE_NAME, reply_markup=generate_keyboard_layout(COURSE_NAME))   
-    
-    
-                
+        await update.message.reply_text(text=COURSE_NAME, reply_markup=generate_keyboard_layout(COURSE_NAME))
+    elif input == "FacultyRequest":
+        "New Feature"
+    elif input == "Explianation":
+        await update.message.reply_text(Explian_Message)
+
+
 # Return The correct keyboard layout depending on the request
 def generate_keyboard_layout(request: str) -> InlineKeyboardMarkup:
     errorNum = 0
@@ -96,12 +99,12 @@ def generate_keyboard_layout(request: str) -> InlineKeyboardMarkup:
 
     elif "Faculty" in request:
         # Dynamic Layout For Faculty
-        MAX_NUM_OF_PROF = 3
+        MAX_NUM_OF_PROF_PER_PAGE = 3
         numOfProf = FACULTY.__len__()   # Number of Proffesors we have in the file
         pageNum = int(request[-1])  # Tracing the page number by this variable helps as in the generation 
 
-        last_index = (pageNum) * MAX_NUM_OF_PROF
-        index = (pageNum - 1) * MAX_NUM_OF_PROF
+        last_index = (pageNum) * MAX_NUM_OF_PROF_PER_PAGE
+        index = (pageNum - 1) * MAX_NUM_OF_PROF_PER_PAGE
 
         # Adding the faculty depending on the number of pages. Condtion1: To Avoid-> to cover all prof, Condition2: out of bound index
         while index < numOfProf and index < last_index:
@@ -156,19 +159,20 @@ async def update_Menu(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
 
 async def error(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    await context.bot.send_message(chat_id=context._chat_id, text='Please send "/Start" to me in "https://t.me/TagrebyBot",\nthen try again.')
+    if context.error.__str__() == "Forbidden: bot can't initiate conversation with a user":
+        await context.bot.send_message(chat_id=context._chat_id, text='Please send "/Start" to me in "https://t.me/TagrebyBot",\nthen try again.')
 
 
 if __name__ == '__main__':
     print("Starting bot...")
     app = ApplicationBuilder().token(TOKEN).build()
     
-    # In private
+     # Command handlers for both private and group chats
     app.add_handler(CommandHandler('start', start_command))
     app.add_handler(CommandHandler('help', help_command))
 
-    # In Group
     app.add_handler(MessageHandler(filters.TEXT, handle_message))
+    
     app.add_handler(CallbackQueryHandler(update_Menu))
 
     
