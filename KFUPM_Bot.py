@@ -13,6 +13,7 @@ df = pd.read_csv('Telegram_Bot_KFUPM/Telegram Bot data.csv', delimiter=',', inde
 df_Faculty = pd.read_csv('Telegram_Bot_KFUPM/KFUPM_Faculty.csv', delimiter=',', index_col='Professors')
 
 global COURSE_NAME
+global PROF_NAME
 FACULTY = []
 
 async def start_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
@@ -54,6 +55,7 @@ def handle_response_inPrivate(text: str) -> str:
 async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
     global COURSE_NAME  
     global FACULTY
+    global PROF_NAME
     Explian_Message = "It seems that you sent an unapporpiate message, This Course does not Exist\nPlease type /help."
     Message = update.message.text
 
@@ -68,28 +70,29 @@ async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
     elif input == "CourseRequest":
         COURSE_NAME = Message.upper()
         FACULTY = df.loc[COURSE_NAME, 'Faculty'].__str__().split('/')
-        await update.message.reply_text(text=COURSE_NAME, reply_markup=generate_keyboard_layout(COURSE_NAME))
+        await update.message.reply_text(text=COURSE_NAME, reply_markup=generate_keyboard_layout(input))
     elif input == "FacultyRequest":
-        "New Feature"
+        PROF_NAME = Message.upper()
+        await update.message.reply_text(text=PROF_NAME, reply_markup=generate_keyboard_layout(input))
     elif input == "Explianation":
         await update.message.reply_text(Explian_Message)
 
 
 # Return The correct keyboard layout depending on the request
 def generate_keyboard_layout(request: str) -> InlineKeyboardMarkup:
-    errorNum = 0
     global COURSE_NAME
     global FACULTY
-
+    global PROF_NAME
     layout = []
 
-    if request == "Details":
+
+    if request == "Course_Details":
         # Layout For Details
         layout = [[InlineKeyboardButton("Groups", callback_data="Groups")],
                    [InlineKeyboardButton("Faculty",callback_data="Faculty Page: 1")],
                    [InlineKeyboardButton("Drive Link", callback_data="Drive Link", url=df.loc[COURSE_NAME,'Drive Link'])],
                    [InlineKeyboardButton("Course Info", callback_data="Course Info")],
-                   [InlineKeyboardButton("Return To Menu 🔙", callback_data="Click on Details")]]
+                   [InlineKeyboardButton("Return To Menu 🔙", callback_data=COURSE_NAME)]]
 
     elif request == "Groups":
         # Layout For Groups
@@ -121,20 +124,28 @@ def generate_keyboard_layout(request: str) -> InlineKeyboardMarkup:
         else:
             layout.append([InlineKeyboardButton("Return🔙", callback_data="Faculty Page: "+str(pageNum-1))])      
             
-
-    elif request == "Course Info" or request == "Try Again":
+    elif request == "Course Info":
         # Layout For Course Info
         layout = [[InlineKeyboardButton("STKFUPM", callback_data= "STKFUPM",url=df.loc[COURSE_NAME, 'Course info STKFUPM URL'])],
                    [InlineKeyboardButton("Overall Info", callback_data= "Overall Info")],
                    [InlineKeyboardButton("Study Tips", callback_data= "Study Tips")],
                    [InlineKeyboardButton("Return To Menu 🔙", callback_data="Details")]]
         
-    elif (request == "Overall Info" or request == "Study Tips") and errorNum == 1:
-        layout = [[InlineKeyboardButton("You Can Not Use This Feature! \nClick On This Link, Then Click: (START) \nhttps://t.me/TagrebyBot \nThen Try Again", callback_data= "AAA")],
-                    [InlineKeyboardButton("Try Again", callback_data="Try Again")]]
+    elif request == "Overall Info" or request == "Study Tips":
+        layout = [[InlineKeyboardButton("Return Back 🔙", callback_data="Course Info")]]
     
-    else: # request = Course Name
-        layout = [[InlineKeyboardButton("Details", callback_data="Details")]]
+    elif request == "CourseRequest":
+        layout = [[InlineKeyboardButton(COURSE_NAME + " Details", callback_data="Course_Details")]]
+
+    elif request == "Prof_Details":
+        layout = [[InlineKeyboardButton("URL", callback_data="URL", url=df_Faculty.loc[PROF_NAME,'URL'])],
+                   [InlineKeyboardButton("Personal Photo",callback_data="Personal Photo")],
+                   [InlineKeyboardButton("Email", callback_data="Email", url=df_Faculty.loc[PROF_NAME,'Email'])],
+                   [InlineKeyboardButton("Return To Menu 🔙", callback_data=PROF_NAME)]]
+    
+    elif request == "FacultyRequest":
+        layout = [[InlineKeyboardButton(PROF_NAME + " Details", callback_data="Prof_Details")]]
+    
 
     show = InlineKeyboardMarkup(layout)
 
@@ -143,6 +154,7 @@ def generate_keyboard_layout(request: str) -> InlineKeyboardMarkup:
 
 async def update_Menu(update: Update, context: ContextTypes.DEFAULT_TYPE):
     global COURSE_NAME
+    global PROF_NAME
 
     query = update.callback_query
     request = query.data
@@ -155,6 +167,9 @@ async def update_Menu(update: Update, context: ContextTypes.DEFAULT_TYPE):
     elif request == "Study Tips":
         await context.bot.send_message(chat_id=update.effective_user.id,
                                        text=df.loc[COURSE_NAME, 'Study Tips'])
+    if request == "Personal Photo":
+        await context.bot.send_photo(chat_id=update.effective_user.id,
+                                       photo=df_Faculty.loc[PROF_NAME, 'Picture'])
     await query.edit_message_text(text=request, reply_markup=show)
 
 
@@ -171,10 +186,9 @@ if __name__ == '__main__':
     app.add_handler(CommandHandler('start', start_command))
     app.add_handler(CommandHandler('help', help_command))
 
-    app.add_handler(MessageHandler(filters.TEXT, handle_message))
+    app.add_handler(MessageHandler(filters.ALL, handle_message))
     
     app.add_handler(CallbackQueryHandler(update_Menu))
-
     
     app.add_error_handler(error)
     app.run_polling()
