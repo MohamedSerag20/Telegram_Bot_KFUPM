@@ -9,8 +9,8 @@ BOT_USERNAME = "@TagrebyBot"
 # TOKEN = '6389988766:AAHu3HD3HEEAuQxxSaCdul9RX4fqPRyjwIo'
 # BOT_USERNAME = "@KFUPM_2023_Bot"
 
-df = pd.read_csv('Telegram_Bot_KFUPM/Telegram Bot data.csv', delimiter=',', index_col='Course Name')
-df_Faculty = pd.read_csv('Telegram_Bot_KFUPM/KFUPM_Faculty.csv', delimiter=',', index_col='Professors')
+df = pd.read_csv('Telegram_Bot_KFUPM/DataFiles/Telegram Bot data.csv', delimiter=',', index_col='Course Name')
+df_Faculty = pd.read_csv('Telegram_Bot_KFUPM/DataFiles/KFUPM_Faculty.csv', delimiter=',', index_col='Professors')
 
 global COURSE_NAME
 global PROF_NAME
@@ -85,7 +85,7 @@ def generate_keyboard_layout(request: str) -> InlineKeyboardMarkup:
     global PROF_NAME
     layout = []
 
-
+    
     if request == "Course_Details":
         # Layout For Details
         layout = [[InlineKeyboardButton("Groups", callback_data="Groups")],
@@ -100,7 +100,7 @@ def generate_keyboard_layout(request: str) -> InlineKeyboardMarkup:
                    [InlineKeyboardButton("WhatsApp Group", callback_data= "WhatsApp Group", url=df.loc[COURSE_NAME, 'Whatsapp Group URL'])],
                    [InlineKeyboardButton("Return To Menu 🔙", callback_data="Details")]]
 
-    elif "Faculty" in request:
+    elif "Faculty Page" in request:
         # Dynamic Layout For Faculty
         MAX_NUM_OF_PROF_PER_PAGE = 3
         numOfProf = FACULTY.__len__()   # Number of Proffesors we have in the file
@@ -136,6 +136,7 @@ def generate_keyboard_layout(request: str) -> InlineKeyboardMarkup:
     
     elif request == "CourseRequest":
         layout = [[InlineKeyboardButton(COURSE_NAME + " Details", callback_data="Course_Details")]]
+        
 
     elif request == "Prof_Details":
         layout = [[InlineKeyboardButton("URL", callback_data="URL", url=df_Faculty.loc[PROF_NAME,'URL'])],
@@ -145,7 +146,6 @@ def generate_keyboard_layout(request: str) -> InlineKeyboardMarkup:
     
     elif request == "FacultyRequest":
         layout = [[InlineKeyboardButton(PROF_NAME + " Details", callback_data="Prof_Details")]]
-    
 
     show = InlineKeyboardMarkup(layout)
 
@@ -176,7 +176,8 @@ async def update_Menu(update: Update, context: ContextTypes.DEFAULT_TYPE):
 async def error(update: Update, context: ContextTypes.DEFAULT_TYPE):
     if context.error.__str__() == "Forbidden: bot can't initiate conversation with a user":
         await context.bot.send_message(chat_id=context._chat_id, text='Please send "/Start" to me in "https://t.me/TagrebyBot",\nthen try again.')
-
+    else:
+        print(f"update ({update} \n.....\n.....\ncaused error {context.error} )")
 
 if __name__ == '__main__':
     print("Starting bot...")
@@ -186,7 +187,7 @@ if __name__ == '__main__':
     app.add_handler(CommandHandler('start', start_command))
     app.add_handler(CommandHandler('help', help_command))
 
-    app.add_handler(MessageHandler(filters.ALL, handle_message))
+    app.add_handler(MessageHandler(filters.TEXT, handle_message))
     
     app.add_handler(CallbackQueryHandler(update_Menu))
     
